@@ -5,20 +5,24 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from recipes.models import (Favourite, Ingredient, IngredientInRecipe, Recipe,
-                            ShoppingCart, Tag)
+                            ShoppingCart, Tag, User)
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import SAFE_METHODS, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
+from rest_framework.views import APIView
+from rest_framework.generics import ListAPIView
 
 from .filters import IngredientFilter, RecipeFilter
 from .pagination import CustomPagination
 from .permissions import IsAdminOrReadOnly, IsAuthorOrReadOnly
 from .serializers import (IngredientSerializer, RecipeReadSerializer,
                           RecipeShortSerializer, RecipeWriteSerializer,
-                          TagSerializer)
+                          SubscriptionSerializer, TagSerializer,
+                          ShowSubscriptionsSerializer)
+from users.models import Subscription
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
@@ -89,10 +93,7 @@ class RecipeViewSet(ModelViewSet):
         return Response({'errors': 'Рецепт уже удален!'},
                         status=status.HTTP_400_BAD_REQUEST)
 
-    @action(
-        detail=False,
-        permission_classes=[IsAuthenticated]
-    )
+    @action(detail=False, permission_classes=[IsAuthenticated])
     def download_shopping_cart(self, request):
         user = request.user
         if not user.shopping_cart.exists():
@@ -123,3 +124,50 @@ class RecipeViewSet(ModelViewSet):
         response['Content-Disposition'] = f'attachment; filename={filename}'
 
         return response
+
+
+class SubscribeView(APIView):
+    """ Операция подписки/отписки. """
+
+    permission_classes = [IsAuthenticated, ]
+
+    def post(self, request, id):
+        data = {
+            'user': request.user.id,
+            'author': id
+        }
+        serializer = SubscriptionSerializer(
+            data=data,
+            context={'request': request}
+        )
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, id):
+        author = get_object_or_404(User, id=id)
+        if Subscription.objects.filter(
+           user=request.user, author=author).exists():
+            subscription = get_object_or_404(
+                Subscription, user=request.user, author=author
+            )
+            subscription.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class ShowSubscriptionsView(ListAPIView):
+    """ Отображение подписок. """
+
+    permission_classes = [IsAuthenticated, ]
+    pagination_class = CustomPagination
+
+    def get(self, request):
+        user = request.user
+        queryset = User.objects.filter(author__user=user)
+        page = self.paginate_queryset(queryset)
+        serializer = ShowSubscriptionsSerializer(
+            page, many=True, context={'request': request}
+        )
+        return self.get_paginated_response(serializer.data)
