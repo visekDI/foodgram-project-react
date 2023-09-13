@@ -53,7 +53,7 @@ class Recipe(models.Model):
         User,
         related_name='recipes',
         on_delete=models.CASCADE,
-        null=False,
+        null=True,
         verbose_name='Автор',
     )
     name = models.CharField('Название', max_length=200)
@@ -98,7 +98,8 @@ class IngredientInRecipe(models.Model):
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
-        related_name='recipes',
+        related_name='ingredient_list',
+        default='',
         verbose_name='Ингредиент',
     )
     amount = models.PositiveSmallIntegerField(
