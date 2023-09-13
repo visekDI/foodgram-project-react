@@ -8,13 +8,13 @@ from recipes.models import Ingredient, Tag
 class Command(BaseCommand):
 
     def add_arguments(self, parser):
-        parser.add_argument("--path", type=str, help="file path")
+        parser.add_argument('--path', type=str, help='file path')
 
     def handle(self, *args, **options):
         file_path = options["path"]
 
-        with open(file_path, encoding='utf-8') as f:
-            jsondata = json.load(f)
+        with open(file_path, encoding='utf-8') as file:
+            jsondata = json.load(file)
             if 'color' in jsondata[0]:
                 for line in jsondata:
                     if not Tag.objects.filter(

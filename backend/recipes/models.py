@@ -1,13 +1,13 @@
-from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, RegexValidator
+from django.db import models
 from django.db.models import UniqueConstraint
 
 User = get_user_model()
 
 
 class Tag(models.Model):
-    """ Модель Тэг """
+    """Модель Тэг"""
 
     name = models.CharField('Название', unique=True, max_length=200)
     color = models.CharField(
@@ -48,11 +48,12 @@ class Ingredient(models.Model):
 
 class Recipe(models.Model):
     """Модель Рецепт"""
+
     author = models.ForeignKey(
         User,
         related_name='recipes',
-        on_delete=models.SET_NULL,
-        null=True,
+        on_delete=models.CASCADE,
+        null=False,
         verbose_name='Автор',
     )
     name = models.CharField('Название', max_length=200)
@@ -97,6 +98,7 @@ class IngredientInRecipe(models.Model):
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
+        related_name='recipes',
         verbose_name='Ингредиент',
     )
     amount = models.PositiveSmallIntegerField(

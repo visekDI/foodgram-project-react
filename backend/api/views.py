@@ -1,28 +1,31 @@
-from datetime import datetime
+import io
 
-from django.db.models import Sum
+from django.db.models import Count, Exists, OuterRef, Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
-from recipes.models import (Favourite, Ingredient, IngredientInRecipe, Recipe,
-                            ShoppingCart, Tag, User)
 from rest_framework import status
 from rest_framework.decorators import action
+from rest_framework.generics import ListAPIView
 from rest_framework.permissions import SAFE_METHODS, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
-from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from rest_framework.views import APIView
-from rest_framework.generics import ListAPIView
+from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
+
+from recipes.models import (Favourite, Ingredient, IngredientInRecipe, Recipe,
+                            ShoppingCart, Tag, User)
+from users.models import Subscription
 
 from .filters import IngredientFilter, RecipeFilter
 from .pagination import CustomPagination
 from .permissions import IsAdminOrReadOnly, IsAuthorOrReadOnly
 from .serializers import (IngredientSerializer, RecipeReadSerializer,
                           RecipeShortSerializer, RecipeWriteSerializer,
-                          SubscriptionSerializer, TagSerializer,
-                          ShowSubscriptionsSerializer)
-from users.models import Subscription
+                          ShowSubscriptionsSerializer, SubscriptionSerializer,
+                          TagSerializer)
+from .utils import create_bucket
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
@@ -46,6 +49,20 @@ class RecipeViewSet(ModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
 
+    def get_queryset(self):
+        user = self.request.user
+        queryset = Recipe.objects.select_related('author').prefetch_related(
+            'tags',
+            'ingredients'
+        )
+        queryset = queryset.annotate(
+            favorited=Exists(Favourite.objects.filter(
+                user=user, recipe=OuterRef('pk'))),
+            in_shopping_cart=Exists(
+                ShoppingCart.objects.filter(user=user, recipe=OuterRef('pk')))
+        )
+        return queryset
+
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
@@ -62,8 +79,7 @@ class RecipeViewSet(ModelViewSet):
     def favorite(self, request, pk):
         if request.method == 'POST':
             return self.add_to(Favourite, request.user, pk)
-        else:
-            return self.delete_from(Favourite, request.user, pk)
+        return self.delete_from(Favourite, request.user, pk)
 
     @action(
         detail=True,
@@ -81,14 +97,19 @@ class RecipeViewSet(ModelViewSet):
             return Response({'errors': 'Рецепт уже добавлен!'},
                             status=status.HTTP_400_BAD_REQUEST)
         recipe = get_object_or_404(Recipe, id=pk)
-        model.objects.create(user=user, recipe=recipe)
-        serializer = RecipeShortSerializer(recipe)
+        serializer = RecipeShortSerializer(
+            data={'id': recipe.id,
+                  'name': recipe.name,
+                  'image': recipe.image,
+                  'cooking_time': recipe.cooking_time})
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def delete_from(self, model, user, pk):
-        obj = model.objects.filter(user=user, recipe__id=pk)
+        obj = model.objects.filter(user=user, recipe__id=pk).delete()
         if obj.exists():
-            obj.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response({'errors': 'Рецепт уже удален!'},
                         status=status.HTTP_400_BAD_REQUEST)
@@ -106,21 +127,19 @@ class RecipeViewSet(ModelViewSet):
             'ingredient__measurement_unit'
         ).annotate(amount=Sum('amount'))
 
-        today = datetime.today()
-        shopping_list = (
-            f'Список покупок для: {user.get_full_name()}\n\n'
-            f'Дата: {today:%Y-%m-%d}\n\n'
-        )
-        shopping_list += '\n'.join([
-            f'- {ingredient["ingredient__name"]} '
-            f'({ingredient["ingredient__measurement_unit"]})'
-            f' - {ingredient["amount"]}'
-            for ingredient in ingredients
-        ])
-        shopping_list += f'\n\nFoodgram ({today:%Y})'
+        today = timezone.now()
 
+        shoping_list = create_bucket(ingredients, today.strftime('%Y-%m-%d'),
+                                     today.strftime('%Y'),
+                                     user.get_full_name()
+                                     )
         filename = f'{user.username}_shopping_list.txt'
-        response = HttpResponse(shopping_list, content_type='text/plain')
+        shopping_list_buffer = io.BytesIO()
+        shopping_list_buffer.write(shoping_list.encode("utf-8"))
+        shopping_list_buffer.seek(0)
+
+        response = HttpResponse(
+            shopping_list_buffer.read(), content_type='text/plain')
         response['Content-Disposition'] = f'attachment; filename={filename}'
 
         return response
@@ -162,10 +181,13 @@ class ShowSubscriptionsView(ListAPIView):
 
     permission_classes = [IsAuthenticated, ]
     pagination_class = CustomPagination
+    serializer_class = ShowSubscriptionsSerializer
 
     def get(self, request):
         user = request.user
-        queryset = User.objects.filter(author__user=user)
+        queryset = User.objects.annotate(
+            recipes_count=Count('recipes')
+        ).filter(author__user=user)
         page = self.paginate_queryset(queryset)
         serializer = ShowSubscriptionsSerializer(
             page, many=True, context={'request': request}

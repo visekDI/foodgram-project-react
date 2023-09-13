@@ -1,7 +1,6 @@
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-
-from foodgram.settings import EMPTY
 
 from .models import Subscription, User
 
@@ -28,4 +27,4 @@ class SubscriptionAdmin(admin.ModelAdmin):
         'user__email'
     ]
     list_filter = ['author__username', 'user__username']
-    empty_value_display = EMPTY
+    empty_value_display = settings.EMPTY
