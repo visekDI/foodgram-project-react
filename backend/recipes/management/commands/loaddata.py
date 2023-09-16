@@ -6,7 +6,6 @@ from recipes.models import Ingredient, Tag
 
 
 class Command(BaseCommand):
-
     def add_arguments(self, parser):
         parser.add_argument('--path', type=str, help='file path')
 
@@ -17,8 +16,7 @@ class Command(BaseCommand):
             jsondata = json.load(file)
             if 'color' in jsondata[0]:
                 for line in jsondata:
-                    if not Tag.objects.filter(
-                       slug=line['slug']).exists():
+                    if not Tag.objects.filter(slug=line['slug']).exists():
                         Tag.objects.create(
                             name=line['name'],
                             color=line['color'],
@@ -27,9 +25,10 @@ class Command(BaseCommand):
             elif 'measurement_unit' in jsondata[0]:
                 for line in jsondata:
                     if not Ingredient.objects.filter(
-                       name=line['name'],
-                       measurement_unit=line['measurement_unit']).exists():
+                        name=line['name'],
+                        measurement_unit=line['measurement_unit'],
+                    ).exists():
                         Ingredient.objects.create(
                             name=line['name'],
-                            measurement_unit=line['measurement_unit']
+                            measurement_unit=line['measurement_unit'],
                         )

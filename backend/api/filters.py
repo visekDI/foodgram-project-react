@@ -15,7 +15,6 @@ class IngredientFilter(FilterSet):
 
 
 class RecipeFilter(FilterSet):
-
     tags = filters.ModelMultipleChoiceFilter(
         field_name='tags__slug',
         to_field_name='slug',
@@ -29,7 +28,10 @@ class RecipeFilter(FilterSet):
 
     class Meta:
         model = Recipe
-        fields = ('tags', 'author',)
+        fields = (
+            'tags',
+            'author',
+        )
 
     def filter_is_favorited(self, queryset, name, value):
         user = self.request.user

@@ -17,9 +17,9 @@ class Tag(models.Model):
         validators=[
             RegexValidator(
                 regex='^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$',
-                message='Введенное значение не является цветом в формате HEX!'
+                message='Введенное значение не является цветом в формате HEX!',
             )
-        ]
+        ],
     )
     slug = models.SlugField('Уникальный слаг', unique=True, max_length=200)
 
@@ -32,7 +32,7 @@ class Tag(models.Model):
 
 
 class Ingredient(models.Model):
-    """ Модель Ингридиент """
+    """Модель Ингридиент"""
 
     name = models.CharField('Название', max_length=200)
     measurement_unit = models.CharField('Единица измерения', max_length=200)
@@ -57,25 +57,20 @@ class Recipe(models.Model):
         verbose_name='Автор',
     )
     name = models.CharField('Название', max_length=200)
-    image = models.ImageField(
-        'Изображение',
-        upload_to='recipes/'
-    )
+    image = models.ImageField('Изображение', upload_to='recipes/')
     text = models.TextField('Описание')
     ingredients = models.ManyToManyField(
         Ingredient,
         through='IngredientInRecipe',
         related_name='recipes',
-        verbose_name='Ингредиенты'
+        verbose_name='Ингредиенты',
     )
     tags = models.ManyToManyField(
-        Tag,
-        related_name='recipes',
-        verbose_name='Теги'
+        Tag, related_name='recipes', verbose_name='Теги'
     )
     cooking_time = models.PositiveSmallIntegerField(
         'Время приготовления',
-        validators=[MinValueValidator(1, message='Минимальное значение 1!')]
+        validators=[MinValueValidator(1, message='Минимальное значение 1!')],
     )
 
     class Meta:
@@ -87,7 +82,7 @@ class Recipe(models.Model):
 
 
 class IngredientInRecipe(models.Model):
-    """ Модель для связи Ингридиента и Рецепта """
+    """Модель для связи Ингридиента и Рецепта"""
 
     recipe = models.ForeignKey(
         Recipe,
@@ -104,7 +99,7 @@ class IngredientInRecipe(models.Model):
     )
     amount = models.PositiveSmallIntegerField(
         'Количество',
-        validators=[MinValueValidator(1, message='Минимальное количество 1!')]
+        validators=[MinValueValidator(1, message='Минимальное количество 1!')],
     )
 
     class Meta:
@@ -119,7 +114,7 @@ class IngredientInRecipe(models.Model):
 
 
 class Favourite(models.Model):
-    """ Модель Избранное """
+    """Модель Избранное"""
 
     user = models.ForeignKey(
         User,
@@ -139,8 +134,7 @@ class Favourite(models.Model):
         verbose_name_plural = 'Избранное'
         constraints = [
             UniqueConstraint(
-                fields=['user', 'recipe'],
-                name='unique_favourite'
+                fields=['user', 'recipe'], name='unique_favourite'
             )
         ]
 
@@ -149,7 +143,7 @@ class Favourite(models.Model):
 
 
 class ShoppingCart(models.Model):
-    """ Модель Корзина покупок """
+    """Модель Корзина покупок"""
 
     user = models.ForeignKey(
         User,
@@ -169,8 +163,7 @@ class ShoppingCart(models.Model):
         verbose_name_plural = 'Корзина покупок'
         constraints = [
             UniqueConstraint(
-                fields=['user', 'recipe'],
-                name='unique_shopping_cart'
+                fields=['user', 'recipe'], name='unique_shopping_cart'
             )
         ]
 

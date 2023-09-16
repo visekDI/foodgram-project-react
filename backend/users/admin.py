@@ -24,7 +24,7 @@ class SubscriptionAdmin(admin.ModelAdmin):
         'author__username',
         'author__email',
         'user__username',
-        'user__email'
+        'user__email',
     ]
     list_filter = ['author__username', 'user__username']
     empty_value_display = settings.EMPTY

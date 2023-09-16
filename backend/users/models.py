@@ -5,15 +5,15 @@ from django.db.models import UniqueConstraint
 
 from .constants import CHARS_MAX_LEN, EMAIL_MAX_LEN
 
-VALIDATE_USERNAME_MSG = ('Username может содержать только буквы,'
-                         ' цифры или следующие символы: @/./+/-/_')
+VALIDATE_USERNAME_MSG = (
+    'Username может содержать только буквы,'
+    ' цифры или следующие символы: @/./+/-/_'
+)
 
 
 class User(AbstractUser):
     email = models.EmailField(
-        max_length=EMAIL_MAX_LEN,
-        blank=False,
-        verbose_name='Почта'
+        max_length=EMAIL_MAX_LEN, blank=False, verbose_name='Почта'
     )
     username = models.CharField(
         max_length=CHARS_MAX_LEN,
@@ -35,8 +35,8 @@ class User(AbstractUser):
         blank=False,
     )
     password = models.CharField(
-        max_length=CHARS_MAX_LEN,
-        verbose_name='Пароль')
+        max_length=CHARS_MAX_LEN, verbose_name='Пароль'
+    )
 
     class Meta:
         verbose_name = 'Пользователи'
@@ -48,26 +48,25 @@ class User(AbstractUser):
 
 
 class Subscription(models.Model):
-    """ Модель подписок. """
+    """Модель подписок."""
 
     user = models.ForeignKey(
         User,
         related_name='follower',
         on_delete=models.CASCADE,
-        verbose_name='Подписчик'
+        verbose_name='Подписчик',
     )
     author = models.ForeignKey(
         User,
         related_name='author',
         on_delete=models.CASCADE,
-        verbose_name='Автор'
+        verbose_name='Автор',
     )
 
     class Meta:
         constraints = [
             UniqueConstraint(
-                fields=['user', 'author'],
-                name='user_author_unique'
+                fields=['user', 'author'], name='user_author_unique'
             )
         ]
 
