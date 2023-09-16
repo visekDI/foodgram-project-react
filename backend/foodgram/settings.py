@@ -118,13 +118,8 @@ REST_FRAMEWORK = {
 }
 
 DJOSER = {
-    'SERIALIZERS': {
-         'user': 'api.serializers.CustomUserSerializer',
-         'user_create': 'api.serializers.CustomUserCreateSerializer',
-         'current_user': 'api.serializers.CustomUserSerializer',
-     },
     'PERMISSIONS': {
-        'user': ['djoser.permissions.CurrentUserOrAdminOrReadOnly'],
+        'user': ['rest_framework.permissions.IsAuthenticated'],
         'user_list': ['rest_framework.permissions.AllowAny'],
     },
     'HIDE_USERS': False,
