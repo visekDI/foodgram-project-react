@@ -95,6 +95,10 @@ class RecipeReadSerializer(ModelSerializer):
 
 
 class IngredientInRecipeWriteSerializer(ModelSerializer):
+    id = PrimaryKeyRelatedField(
+        queryset=Ingredient.objects.all()
+    )
+
     class Meta:
         model = IngredientInRecipe
         fields = ('id', 'amount')
@@ -150,14 +154,12 @@ class RecipeWriteSerializer(ModelSerializer):
     @transaction.atomic
     def create_ingredients_amounts(self, ingredients, recipe):
         IngredientInRecipe.objects.bulk_create(
-            [
-                IngredientInRecipe(
-                    ingredient=get_object_or_404(Ingredient, id=id),
-                    recipe=recipe,
-                    amount=ingredient['amount'],
-                )
-                for ingredient in ingredients
-            ]
+            IngredientInRecipe(
+                ingredient=ingredient['id'],
+                recipe=recipe,
+                amount=ingredient['amount'],
+            )
+            for ingredient in ingredients
         )
 
     @transaction.atomic
