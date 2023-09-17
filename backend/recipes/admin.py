@@ -1,21 +1,21 @@
 import csv
 
-from django.shortcuts import render
-from django.http import HttpResponseRedirect
 from django.contrib import admin, messages
 from django.contrib.admin import display
 from django.db.models import Count
+from django.http import HttpResponseRedirect
+from django.shortcuts import render
 from django.urls import path, reverse
 
 from .forms import IngredientImportForm
 from .models import (
     Favourite,
+    ImportIngredient,
     Ingredient,
     IngredientInRecipe,
     Recipe,
     ShoppingCart,
     Tag,
-    ImportIngredient,
 )
 
 
