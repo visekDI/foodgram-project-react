@@ -6,6 +6,13 @@ from django.db.models import UniqueConstraint
 User = get_user_model()
 
 
+class ImportIngredient(models.Model):
+    """Модель импорта ингридиентов."""
+
+    csv_file = models.FileField(upload_to='uploads/')
+    date_added = models.DateTimeField(auto_now_add=True)
+
+
 class Tag(models.Model):
     """Модель Тэг"""
 
