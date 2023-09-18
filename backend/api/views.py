@@ -34,8 +34,8 @@ from .serializers import (
     RecipeReadSerializer,
     RecipeWriteSerializer,
     ShoppingCartSerializer,
-    SubscriptionSerializer,
     ShowSubscriptionsSerializer,
+    SubscriptionSerializer,
     TagSerializer,
 )
 from .utils import create_bucket
