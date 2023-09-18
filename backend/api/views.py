@@ -80,12 +80,15 @@ class CustomUserViewSet(UserViewSet):
         methods=['post'],
         permission_classes=[IsAuthenticated],
     )
-    def Subscribe(self, request, pk):
-        return self.add_to(SubscriptionSerializer, Subscription, request, pk)
+    def subscribe(self, request, id):
+        return self.adding_author(SubscriptionSerializer,
+                                  Subscription,
+                                  request,
+                                  id)
 
-    @Subscribe.mapping.delete
-    def delete_favorite(self, request, pk):
-        get_object_or_404(Subscription, user=request.user, author=pk).delete()
+    @subscribe.mapping.delete
+    def delete_favorite(self, request, id):
+        get_object_or_404(Subscription, user=request.user, author=id).delete()
         return response.Response(
             {'detail': 'Успешная отписка'},
             status=status.HTTP_204_NO_CONTENT,
