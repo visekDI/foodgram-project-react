@@ -129,6 +129,17 @@ class RecipeViewSet(ModelViewSet):
             return RecipeReadSerializer
         return RecipeWriteSerializer
 
+    @staticmethod
+    def add_to(add_serializer, model, request, recipe_id):
+        user = request.user
+        data = {'user': user.id, 'recipe': recipe_id}
+        serializer = add_serializer(data=data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return response.Response(
+            serializer.data, status=status.HTTP_201_CREATED
+        )
+
     @action(
         detail=True,
         methods=['post'],
@@ -147,31 +158,18 @@ class RecipeViewSet(ModelViewSet):
 
     @action(
         detail=True,
-        methods=['post', 'delete'],
+        methods=['post'],
         permission_classes=[IsAuthenticated],
     )
     def shopping_cart(self, request, pk):
-        if request.method == 'POST':
-            return self.add_to(ShoppingCart, request.user, pk)
-        return self.delete_from(ShoppingCart, request.user, pk)
+        return self.add_to(ShoppingCartSerializer, ShoppingCart, request, pk)
 
-    def add_to(add_serializer, model, request, recipe_id):
-        user = request.user
-        data = {'user': user.id, 'recipe': recipe_id}
-        serializer = add_serializer(data=data, context={'request': request})
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
+    @shopping_cart.mapping.delete
+    def delete_shopping_cart(self, request, pk):
+        get_object_or_404(ShoppingCart, user=request.user, recipe=pk).delete()
         return response.Response(
-            serializer.data, status=status.HTTP_201_CREATED
-        )
-
-    def delete_from(self, model, user, pk):
-        obj = model.objects.filter(user=user, recipe__id=pk).delete()
-        if obj.exists():
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(
-            {'errors': 'Рецепт уже удален!'},
-            status=status.HTTP_400_BAD_REQUEST,
+            {'detail': 'Рецепт успешно удалён из корзины!'},
+            status=status.HTTP_204_NO_CONTENT,
         )
 
     @action(detail=False, permission_classes=[IsAuthenticated])
