@@ -6,15 +6,34 @@ from .models import Subscription, User
 
 
 @admin.register(User)
-class UserAdmin(UserAdmin):
+class UserAdmin(admin.ModelAdmin):
+    """Админка Пользователей."""
+
     list_display = (
-        'username',
         'id',
+        'username',
         'email',
         'first_name',
         'last_name',
+        'count_followers',
+        'count_recipes',
     )
-    list_filter = ('email', 'first_name')
+    readonly_fields = ('count_followers', 'count_recipes')
+    list_filter = (
+        'username',
+        'email',
+    )
+    search_fields = ('username', 'email')
+
+    @admin.display(description='Количество подписчиков')
+    def count_followers(self, obj):
+        """Получаем количество подписчиков."""
+        return obj.follower.count()
+
+    @admin.display(description='Количество рецептов')
+    def count_recipes(self, obj):
+        """Получаем количество подписчиков."""
+        return obj.recipes.count()
 
 
 @admin.register(Subscription)

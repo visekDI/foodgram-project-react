@@ -220,33 +220,23 @@ class ShowFavoriteSerializer(ModelSerializer):
         fields = ('id', 'name', 'image', 'cooking_time')
 
 
-class ShowSubscriptionsSerializer(ModelSerializer):
+class ShowSubscriptionsSerializer(CustomUserSerializer):
     """Сериализатор для отображения подписок пользователя."""
 
-    is_subscribed = SerializerMethodField()
     recipes = SerializerMethodField()
     recipes_count = SerializerMethodField()
 
-    class Meta:
-        model = User
-        fields = (
-            'id',
-            'email',
-            'username',
-            'first_name',
-            'last_name',
-            'is_subscribed',
+    class Meta(CustomUserSerializer.Meta):
+        fields = CustomUserSerializer.Meta.fields + (
             'recipes',
             'recipes_count',
         )
-
-    def get_is_subscribed(self, obj):
-        request = self.context.get('request')
-        if request is None or request.user.is_anonymous:
-            return False
-        return Subscription.objects.filter(
-            user=request.user, author=obj
-        ).exists()
+        read_only_fields = (
+            'email',
+            'username',
+            'last_name',
+            'first_name',
+        )
 
     def get_recipes(self, obj):
         request = self.context.get('request')
@@ -259,6 +249,10 @@ class ShowSubscriptionsSerializer(ModelSerializer):
         return ShowFavoriteSerializer(
             recipes, many=True, context={'request': request}
         ).data
+
+    def get_recipes_count(self, obj):
+        """Метод получения колличества рецепта."""
+        return obj.recipes.count()
 
 
 class SubscriptionSerializer(ModelSerializer):
@@ -282,7 +276,7 @@ class SubscriptionSerializer(ModelSerializer):
 
 class FavoritSerializer(ModelSerializer):
     class Meta:
-        Model = Favourite
+        model = Favourite
         fields = (
             'user',
             'recipe',
@@ -296,7 +290,7 @@ class FavoritSerializer(ModelSerializer):
         ]
 
     def to_representation(self, instance):
-        request = self.contest.get('request')
+        request = self.context.get('request')
         return RecipeShortSerializer(
             instance.recipe, context={'request': request}
         ).data
@@ -304,7 +298,7 @@ class FavoritSerializer(ModelSerializer):
 
 class ShoppingCartSerializer(ModelSerializer):
     class Meta:
-        Model = ShoppingCart
+        model = ShoppingCart
         fields = (
             'user',
             'recipe',
@@ -318,7 +312,7 @@ class ShoppingCartSerializer(ModelSerializer):
         ]
 
     def to_representation(self, instance):
-        request = self.contest.get('request')
+        request = self.context.get('request')
         return RecipeShortSerializer(
             instance.recipe, context={'request': request}
         ).data
