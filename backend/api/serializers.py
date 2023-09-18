@@ -9,7 +9,14 @@ from rest_framework.relations import PrimaryKeyRelatedField
 from rest_framework.serializers import ModelSerializer
 from rest_framework.validators import UniqueTogetherValidator
 
-from recipes.models import Ingredient, IngredientInRecipe, Recipe, Tag
+from recipes.models import (
+    Ingredient,
+    IngredientInRecipe,
+    Recipe,
+    Tag,
+    Favourite,
+    ShoppingCart,
+)
 from users.models import Subscription
 
 User = get_user_model()
@@ -100,9 +107,7 @@ class RecipeReadSerializer(ModelSerializer):
 
 
 class IngredientInRecipeWriteSerializer(ModelSerializer):
-    id = PrimaryKeyRelatedField(
-        queryset=Ingredient.objects.all()
-    )
+    id = PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
 
     class Meta:
         model = IngredientInRecipe
@@ -272,4 +277,48 @@ class SubscriptionSerializer(ModelSerializer):
     def to_representation(self, instance):
         return ShowSubscriptionsSerializer(
             instance.author, context={'request': self.context.get('request')}
+        ).data
+
+
+class FavoritSerializer(ModelSerializer):
+    class Meta:
+        Model = Favourite
+        fields = (
+            'user',
+            'recipe',
+        )
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Favourite.objects.all(),
+                fields=['user', 'recipe'],
+                message='Рецепт уже добавлен!',
+            )
+        ]
+
+    def to_representation(self, instance):
+        request = self.contest.get('request')
+        return RecipeShortSerializer(
+            instance.recipe, context={'request': request}
+        ).data
+
+
+class ShoppingCartSerializer(ModelSerializer):
+    class Meta:
+        Model = ShoppingCart
+        fields = (
+            'user',
+            'recipe',
+        )
+        validators = [
+            UniqueTogetherValidator(
+                queryset=ShoppingCart.objects.all(),
+                fields=['user', 'recipe'],
+                message='Рецепт уже в корзине!',
+            )
+        ]
+
+    def to_representation(self, instance):
+        request = self.contest.get('request')
+        return RecipeShortSerializer(
+            instance.recipe, context={'request': request}
         ).data

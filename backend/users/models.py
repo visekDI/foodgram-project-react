@@ -13,13 +13,11 @@ VALIDATE_USERNAME_MSG = (
 
 class User(AbstractUser):
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = (
-        'first_name',
-        'last_name',
-        'username'
-    )
+    REQUIRED_FIELDS = ('first_name', 'last_name', 'username')
     email = models.EmailField(
-        max_length=EMAIL_MAX_LEN, blank=False, verbose_name='Почта',
+        max_length=EMAIL_MAX_LEN,
+        blank=False,
+        verbose_name='Почта',
         unique=True,
     )
     username = models.CharField(
