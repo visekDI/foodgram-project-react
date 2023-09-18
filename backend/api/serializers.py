@@ -273,3 +273,5 @@ class SubscriptionSerializer(ModelSerializer):
         return ShowSubscriptionsSerializer(
             instance.author, context={'request': self.context.get('request')}
         ).data
+
+
