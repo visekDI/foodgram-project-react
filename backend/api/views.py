@@ -35,6 +35,7 @@ from .serializers import (
     RecipeWriteSerializer,
     ShoppingCartSerializer,
     SubscriptionSerializer,
+    ShowSubscriptionsSerializer,
     TagSerializer,
 )
 from .utils import create_bucket
@@ -56,6 +57,22 @@ class CustomUserViewSet(UserViewSet):
         return response.Response(
             serializer.to_representation(serializer.instance),
             status=status.HTTP_201_CREATED,
+        )
+
+    @action(
+        detail=False,
+        methods=['get'],
+        permission_classes=(IsAuthenticated,)
+    )
+    def subscriptions(self, request):
+        return self.get_paginated_response(
+            ShowSubscriptionsSerializer(
+                self.paginate_queryset(
+                    User.objects.filter(subscribing__user=request.user)
+                ),
+                many=True,
+                context={'request': request},
+            ).data
         )
 
     @action(
