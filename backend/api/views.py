@@ -31,14 +31,14 @@ from .pagination import CustomPagination
 from .permissions import IsAdminOrReadOnly, IsAuthorOrReadOnly
 from .serializers import (
     CustomUserSerializer,
+    FavoritSerializer,
     IngredientSerializer,
     RecipeReadSerializer,
     RecipeWriteSerializer,
+    ShoppingCartSerializer,
     ShowSubscriptionsSerializer,
     SubscriptionSerializer,
     TagSerializer,
-    FavoritSerializer,
-    ShoppingCartSerializer,
 )
 from .utils import create_bucket
 

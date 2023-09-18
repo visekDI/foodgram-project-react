@@ -10,12 +10,12 @@ from rest_framework.serializers import ModelSerializer
 from rest_framework.validators import UniqueTogetherValidator
 
 from recipes.models import (
+    Favourite,
     Ingredient,
     IngredientInRecipe,
     Recipe,
-    Tag,
-    Favourite,
     ShoppingCart,
+    Tag,
 )
 from users.models import Subscription
 
