@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
-from rest_framework import status
+from rest_framework import response, status
 from rest_framework.decorators import action
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import SAFE_METHODS, IsAuthenticated
@@ -14,7 +14,6 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
-
 from recipes.models import (
     Favourite,
     Ingredient,
@@ -149,25 +148,15 @@ class RecipeViewSet(ModelViewSet):
         else:
             return self.delete_from(ShoppingCart, request.user, pk)
 
-    def add_to(self, model, user, pk):
-        if model.objects.filter(user=user, recipe__id=pk).exists():
-            return Response(
-                {'errors': 'Рецепт уже добавлен!'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        recipe = get_object_or_404(Recipe, id=pk)
-        serializer = RecipeShortSerializer(
-            data={
-                'id': recipe.id,
-                'name': recipe.name,
-                'image': recipe.image,
-                'cooking_time': recipe.cooking_time,
-            }
+    def add_to(add_serializer, model, request, recipe_id):
+        user = request.user
+        data = {'user': user.id, 'recipe': recipe_id}
+        serializer = add_serializer(data=data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return response.Response(
+            serializer.data, status=status.HTTP_201_CREATED
         )
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def delete_from(self, model, user, pk):
         obj = model.objects.filter(user=user, recipe__id=pk).delete()
