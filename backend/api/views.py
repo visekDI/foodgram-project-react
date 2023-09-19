@@ -68,7 +68,7 @@ class CustomUserViewSet(UserViewSet):
         return self.get_paginated_response(
             ShowSubscriptionsSerializer(
                 self.paginate_queryset(
-                    User.objects.filter(subscribing__user=request.user)
+                    User.objects.filter(author__user=request.user)
                 ),
                 many=True,
                 context={'request': request},
