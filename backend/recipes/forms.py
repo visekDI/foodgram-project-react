@@ -27,7 +27,7 @@ class RecipeAdminForm(ModelForm):
 
     class Meta:
         model = Recipe
-        fields = "__all__"
+        fields = ('author', 'name', 'image', 'text', 'cooking_time')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

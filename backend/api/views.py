@@ -1,8 +1,5 @@
-import io
-
-from django.db.models import Exists, OuterRef, Sum
+from django.db.models import Count, Exists, OuterRef, Sum
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
@@ -38,7 +35,7 @@ from .serializers import (
     SubscriptionSerializer,
     TagSerializer,
 )
-from .utils import create_bucket
+from .utils import create_shopping_list_buffer
 
 
 class CustomUserViewSet(UserViewSet):
@@ -48,7 +45,7 @@ class CustomUserViewSet(UserViewSet):
 
     @staticmethod
     def adding_author(add_serializer, model, request, author_id):
-        """Кастомный метод добавления author и получения данных"""
+        """Кастомный метод добавления author и получения данных."""
         user = request.user
         data = {'user': user.id, 'author': author_id}
         serializer = add_serializer(data=data, context={'request': request})
@@ -60,20 +57,30 @@ class CustomUserViewSet(UserViewSet):
         )
 
     @action(
-        detail=False,
-        methods=['get'],
-        permission_classes=(IsAuthenticated,)
+        detail=False, methods=['get'], permission_classes=(IsAuthenticated,)
     )
     def subscriptions(self, request):
-        return self.get_paginated_response(
-            ShowSubscriptionsSerializer(
-                self.paginate_queryset(
-                    User.objects.filter(author__user=request.user)
-                ),
-                many=True,
-                context={'request': request},
-            ).data
+        queryset = User.objects.filter(author__user=request.user).annotate(
+            recipes_count=Count('subscriptions')
         )
+        serialized_data = ShowSubscriptionsSerializer(
+            self.paginate_queryset(queryset),
+            many=True,
+            context={'request': request},
+        ).data
+
+        return self.get_paginated_response(serialized_data)
+
+    # def subscriptions(self, request):
+    #     return self.get_paginated_response(
+    #         ShowSubscriptionsSerializer(
+    #             self.paginate_queryset(
+    #                 User.objects.filter(author__user=request.user)
+    #             ),
+    #             many=True,
+    #             context={'request': request},
+    #         ).data
+    #     )
 
     @action(
         detail=True,
@@ -81,14 +88,14 @@ class CustomUserViewSet(UserViewSet):
         permission_classes=[IsAuthenticated],
     )
     def subscribe(self, request, id):
-        return self.adding_author(SubscriptionSerializer,
-                                  Subscription,
-                                  request,
-                                  id)
+        return self.adding_author(
+            SubscriptionSerializer, Subscription, request, id
+        )
 
     @subscribe.mapping.delete
     def delete_favorite(self, request, id):
-        get_object_or_404(Subscription, user=request.user, author=id).delete()
+        queryset = Subscription.objects.filter(user=request.user, author=id)
+        queryset.delete()
         return response.Response(
             {'detail': 'Успешная отписка'},
             status=status.HTTP_204_NO_CONTENT,
@@ -160,7 +167,8 @@ class RecipeViewSet(ModelViewSet):
 
     @favorite.mapping.delete
     def delete_favorite(self, request, pk):
-        get_object_or_404(Favourite, user=request.user, recipe=pk).delete()
+        queryset = Favourite.objects.filter(user=request.user, recipe=pk)
+        queryset.delete()
         return response.Response(
             {'detail': 'Рецепт успешно удалён из избранного!'},
             status=status.HTTP_204_NO_CONTENT,
@@ -176,7 +184,8 @@ class RecipeViewSet(ModelViewSet):
 
     @shopping_cart.mapping.delete
     def delete_shopping_cart(self, request, pk):
-        get_object_or_404(ShoppingCart, user=request.user, recipe=pk).delete()
+        queryset = ShoppingCart.objects.filter(user=request.user, recipe=pk)
+        queryset.delete()
         return response.Response(
             {'detail': 'Рецепт успешно удалён из корзины!'},
             status=status.HTTP_204_NO_CONTENT,
@@ -198,20 +207,57 @@ class RecipeViewSet(ModelViewSet):
 
         today = timezone.now()
 
-        shoping_list = create_bucket(
+        shopping_list_buffer = create_shopping_list_buffer(
             ingredients,
             today.strftime('%Y-%m-%d'),
             today.strftime('%Y'),
             user.get_full_name(),
         )
+
         filename = f'{user.username}_shopping_list.txt'
-        shopping_list_buffer = io.BytesIO()
-        shopping_list_buffer.write(shoping_list.encode("utf-8"))
-        shopping_list_buffer.seek(0)
 
         response = HttpResponse(
-            shopping_list_buffer.read(), content_type='text/plain'
+            shopping_list_buffer.read(),
+            content_type='text/plain;charset=UTF-8',
         )
         response['Content-Disposition'] = f'attachment; filename={filename}'
 
         return response
+
+    # @action(detail=False, permission_classes=[IsAuthenticated])
+    # def download_shopping_cart(self, request):
+    #     user = request.user
+    #     if not user.shopping_cart.exists():
+    #         return Response(status=HTTP_400_BAD_REQUEST)
+
+    #     ingredients = (
+    #         IngredientInRecipe.objects.filter(
+    #             recipe__shopping_cart__user=request.user
+    #         )
+    #         .values('ingredient__name', 'ingredient__measurement_unit')
+    #         .annotate(amount=Sum('amount'))
+    #     )
+
+    #     today = timezone.now()
+
+    #     shoping_list = create_bucket(
+    #         ingredients,
+    #         today.strftime('%Y-%m-%d'),
+    #         today.strftime('%Y'),
+    #         user.get_full_name(),
+    #     )
+    #     filename = f'{user.username}_shopping_list.txt'
+    #     shopping_list_buffer = io.BytesIO()
+    #     shopping_list_buffer.write(shoping_list.encode("utf-8"))
+    #     shopping_list_buffer.seek(0)
+
+    #     response = HttpResponse(
+    #         shopping_list_buffer.read(), content_type='text/plain'
+    #     )
+    #     response['Content-Disposition'] = f'attachment; filename={filename}'
+
+    #     return response
+    #     response = HttpResponse(content_type='text/plain;charset=UTF-8')
+    #     response['Content-Disposition'] = f'attachment; filename={filename}'
+    #     response.write(shoping_list.encode("utf-8"))
+    #     return response

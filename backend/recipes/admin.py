@@ -2,11 +2,14 @@ import csv
 
 from django.contrib import admin, messages
 from django.contrib.auth.models import Group
+from django.db.models import Count, Prefetch
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import path, reverse
 from django.utils.safestring import mark_safe
 from rest_framework.authtoken.models import TokenProxy
+
+from users.models import Subscription, User
 
 from .forms import IngredientImportForm, RecipeAdminForm
 from .models import (
@@ -72,6 +75,8 @@ class TagAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
     list_display = ('name', 'color', 'slug')
     list_editable = ('color',)
+    search_fields = ('name', 'color', 'slug')
+    list_filter = ('name',)
     empty_value_display = '-пусто-'
 
 
@@ -80,51 +85,75 @@ class ImportIngredient(admin.ModelAdmin):
     list_display = ('csv_file', 'date_added')
 
 
+# @admin.register(Recipe)
+# class RecipeAdmin(admin.ModelAdmin):
+#     form = RecipeAdminForm
+#     list_display = (
+#         'id',
+#         'author',
+#         'name',
+#         'get_ingredients',
+#         'get_tags',
+#         'in_favorites',
+#         'get_image',
+#     )
+#     fields = (
+#         'name',
+#         'author',
+#         'text',
+#         # 'image',
+#         'tags',
+#         'cooking_time',
+#     )
+#     search_fields = ('name', 'author', 'tags')
+#     list_filter = ('name', 'author', 'tags')
+#     inlines = (RecipeIngredientInline,)
+#     empty_value_display = '- пусто -'
+#     filter_horizontal = ("tags",)
+
+#     @admin.display(description='Изображение')
+#     def get_image(self, obj):
+#         return mark_safe(f'<img src={obj.image.url} width="80" hieght="30"')
+
+#     @admin.display(description='В избранном')
+#     def in_favorites(self, obj):
+#         return obj.favorites.count()
+
+#     @admin.display(description='Ингредиенты')
+#     def get_ingredients(self, obj):
+#         ingredients_list = []
+#         for ingredient in obj.ingredients.all():
+#             ingredients_list.append(ingredient.name.lower())
+#         return ', '.join(ingredients_list)
+
+
+#     @admin.display(description='Теги')
+#     def get_tags(self, obj):
+#         ls = [_.name for _ in obj.tags.all()]
+#         return ', '.join(ls)
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
-    form = RecipeAdminForm
-    list_display = (
-        'id',
+    list_display = ('name', 'id', 'author', 'added_in_favorites')
+    readonly_fields = ('added_in_favorites',)
+    list_filter = (
         'author',
         'name',
-        'get_ingredients',
-        'get_tags',
-        'in_favorites',
-        'get_image',
-    )
-    fields = (
-        'name',
-        'author',
-        'text',
-        'image',
         'tags',
-        'cooking_time',
     )
-    search_fields = ('name', 'author', 'tags')
-    list_filter = ('name', 'author', 'tags')
-    inlines = (RecipeIngredientInline,)
-    empty_value_display = '- пусто -'
-    filter_horizontal = ("tags",)
 
-    @admin.display(description='Изображение')
-    def get_image(self, obj):
-        return mark_safe(f'<img src={obj.image.url} width="80" hieght="30"')
+    def get_queryset(self, request):
+        queryset = (
+            super()
+            .get_queryset(request)
+            .select_related('author')
+            .prefetch_related('tags')
+            .annotate(favorites_count=Count('favorites'))
+        )
+        return queryset
 
-    @admin.display(description='В избранном')
-    def in_favorites(self, obj):
-        return obj.favorites.count()
-
-    @admin.display(description='Ингредиенты')
-    def get_ingredients(self, obj):
-        ingredients_list = []
-        for ingredient in obj.ingredients.all():
-            ingredients_list.append(ingredient.name.lower())
-        return ', '.join(ingredients_list)
-
-    @admin.display(description='Теги')
-    def get_tags(self, obj):
-        ls = [_.name for _ in obj.tags.all()]
-        return ', '.join(ls)
+    @admin.display(description='Количество в избранных')
+    def added_in_favorites(self, obj):
+        return obj.favorites_count
 
 
 @admin.register(IngredientInRecipe)
@@ -138,11 +167,33 @@ class FavoriteAdmin(admin.ModelAdmin):
     list_display = ('pk', 'user', 'recipe')
     list_editable = ('user', 'recipe')
 
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .select_related('user')
+            .prefetch_related(
+                'recipe__ingredients',
+                'recipe__tags',
+            )
+        )
+
 
 @admin.register(ShoppingCart)
 class ShoppingCartAdmin(admin.ModelAdmin):
     list_display = ('pk', 'user', 'recipe')
     list_editable = ('user', 'recipe')
+
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .select_related('user')
+            .prefetch_related(
+                'recipe__ingredients',
+                'recipe__tags',
+            )
+        )
 
 
 admin.site.unregister(Group)

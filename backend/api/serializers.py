@@ -3,6 +3,7 @@ from django.db import transaction
 from django.db.models import F
 from djoser.serializers import UserSerializer
 from drf_extra_fields.fields import Base64ImageField
+from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import SerializerMethodField
 from rest_framework.relations import PrimaryKeyRelatedField
@@ -64,8 +65,8 @@ class RecipeReadSerializer(ModelSerializer):
     author = CustomUserSerializer(read_only=True)
     ingredients = SerializerMethodField()
     image = Base64ImageField()
-    is_favorited = SerializerMethodField(read_only=True)
-    is_in_shopping_cart = SerializerMethodField(read_only=True)
+    favorited = serializers.BooleanField(read_only=True)
+    in_shopping_cart = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = Recipe
@@ -74,14 +75,12 @@ class RecipeReadSerializer(ModelSerializer):
             'tags',
             'author',
             'ingredients',
-            'is_favorited',
-            'is_in_shopping_cart',
             'name',
             'image',
             'text',
             'cooking_time',
-            'is_favorited',
-            'is_in_shopping_cart',
+            'favorited',
+            'in_shopping_cart',
         )
 
     def get_ingredients(self, obj):
@@ -92,18 +91,6 @@ class RecipeReadSerializer(ModelSerializer):
             amount=F('ingredient_list__amount'),
         )
         return ingredients
-
-    def get_is_in_shopping_cart(self, obj):
-        user = self.context.get('request').user
-        if user.is_anonymous:
-            return False
-        return user.shopping_cart.filter(recipe=obj).exists()
-
-    def get_is_favorited(self, obj):
-        user = self.context.get('request').user
-        if user.is_anonymous:
-            return False
-        return user.favorites.filter(recipe=obj).exists()
 
 
 class IngredientInRecipeWriteSerializer(ModelSerializer):
@@ -192,8 +179,7 @@ class RecipeWriteSerializer(ModelSerializer):
         self.create_ingredients_amounts(
             recipe=instance, ingredients=ingredients
         )
-        instance = super().update(instance, validated_data)
-        return instance
+        return super().update(instance, validated_data)
 
     def to_representation(self, instance):
         request = self.context.get('request')
@@ -224,7 +210,8 @@ class ShowSubscriptionsSerializer(CustomUserSerializer):
     """Сериализатор для отображения подписок пользователя."""
 
     recipes = SerializerMethodField()
-    recipes_count = SerializerMethodField()
+    recipes_count = serializers.IntegerField(read_only=True)
+    # recipes_count = SerializerMethodField()
 
     class Meta(CustomUserSerializer.Meta):
         fields = CustomUserSerializer.Meta.fields + (
@@ -250,9 +237,9 @@ class ShowSubscriptionsSerializer(CustomUserSerializer):
             recipes, many=True, context={'request': request}
         ).data
 
-    def get_recipes_count(self, obj):
-        """Метод получения колличества рецепта."""
-        return obj.recipes.count()
+    # def get_recipes_count(self, obj):
+    #     """Метод получения колличества рецепта."""
+    #     return obj.recipes.count()
 
 
 class SubscriptionSerializer(ModelSerializer):

@@ -14,7 +14,7 @@ class ImportIngredient(models.Model):
 
 
 class Tag(models.Model):
-    """Модель Тэг"""
+    """Модель Тэг."""
 
     name = models.CharField('Название', unique=True, max_length=200)
     color = models.CharField(
@@ -101,7 +101,6 @@ class IngredientInRecipe(models.Model):
         Ingredient,
         on_delete=models.CASCADE,
         related_name='ingredient_list',
-        default='',
         verbose_name='Ингредиент',
     )
     amount = models.PositiveSmallIntegerField(

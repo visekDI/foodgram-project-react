@@ -5,7 +5,7 @@ from django.db.models import UniqueConstraint
 
 from .constants import CHARS_MAX_LEN, EMAIL_MAX_LEN
 
-VALIDATE_USERNAME_MSG = (
+VALIDATE_USERNAME = (
     'Username может содержать только буквы,'
     ' цифры или следующие символы: @/./+/-/_'
 )
@@ -26,7 +26,7 @@ class User(AbstractUser):
         blank=False,
         verbose_name='Никнейм',
         validators=[
-            RegexValidator(regex=r'^[\w.@+-]+$', message=VALIDATE_USERNAME_MSG)
+            RegexValidator(regex=r'^[\w.@+-]+$', message=VALIDATE_USERNAME)
         ],
     )
     first_name = models.CharField(
@@ -57,7 +57,7 @@ class Subscription(models.Model):
 
     user = models.ForeignKey(
         User,
-        related_name='follower',
+        related_name='subscriptions',
         on_delete=models.CASCADE,
         verbose_name='Подписчик',
     )
