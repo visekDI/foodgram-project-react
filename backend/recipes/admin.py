@@ -6,10 +6,9 @@ from django.db.models import Count
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import path, reverse
+
 # from django.utils.safestring import mark_safe
 from rest_framework.authtoken.models import TokenProxy
-
-# from users.models import Subscription, User
 
 from .forms import IngredientImportForm
 from .models import (
@@ -21,6 +20,9 @@ from .models import (
     ShoppingCart,
     Tag,
 )
+
+# from users.models import Subscription, User
+
 
 
 @admin.register(Ingredient)
