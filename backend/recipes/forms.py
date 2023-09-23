@@ -1,10 +1,9 @@
-from django.forms import (
-    CheckboxSelectMultiple,
-    ModelForm,
-    ModelMultipleChoiceField,
-)
+from django.forms import ModelForm
 
-from .models import ImportIngredient, Recipe, Tag
+# # CheckboxSelectMultiple,
+#     ModelForms
+#     # ModelMultipleChoiceField,
+from .models import ImportIngredient
 
 
 class IngredientImportForm(ModelForm):
@@ -15,20 +14,20 @@ class IngredientImportForm(ModelForm):
         fields = ('csv_file',)
 
 
-class RecipeAdminForm(ModelForm):
-    """Форма для админки рецептов"""
+# class RecipeAdminForm(ModelForm):
+#     """Форма для админки рецептов"""
 
-    tags = ModelMultipleChoiceField(
-        queryset=Tag.objects.all(),
-        widget=CheckboxSelectMultiple,
-        required=False,
-        label=("Tags"),
-    )
+#     tags = ModelMultipleChoiceField(
+#         queryset=Tag.objects.all(),
+#         widget=CheckboxSelectMultiple,
+#         required=False,
+#         label=("Tags"),
+#     )
 
-    class Meta:
-        model = Recipe
-        fields = ('author', 'name', 'image', 'text', 'cooking_time')
+#     class Meta:
+#         model = Recipe
+#         fields = ('author', 'name', 'image', 'text', 'cooking_time')
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['tags'].required = True
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+#         self.fields['tags'].required = True
