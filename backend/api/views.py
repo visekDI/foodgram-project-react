@@ -71,17 +71,6 @@ class CustomUserViewSet(UserViewSet):
 
         return self.get_paginated_response(serialized_data)
 
-    # def subscriptions(self, request):
-    #     return self.get_paginated_response(
-    #         ShowSubscriptionsSerializer(
-    #             self.paginate_queryset(
-    #                 User.objects.filter(author__user=request.user)
-    #             ),
-    #             many=True,
-    #             context={'request': request},
-    #         ).data
-    #     )
-
     @action(
         detail=True,
         methods=['post'],
@@ -223,41 +212,3 @@ class RecipeViewSet(ModelViewSet):
         response['Content-Disposition'] = f'attachment; filename={filename}'
 
         return response
-
-    # @action(detail=False, permission_classes=[IsAuthenticated])
-    # def download_shopping_cart(self, request):
-    #     user = request.user
-    #     if not user.shopping_cart.exists():
-    #         return Response(status=HTTP_400_BAD_REQUEST)
-
-    #     ingredients = (
-    #         IngredientInRecipe.objects.filter(
-    #             recipe__shopping_cart__user=request.user
-    #         )
-    #         .values('ingredient__name', 'ingredient__measurement_unit')
-    #         .annotate(amount=Sum('amount'))
-    #     )
-
-    #     today = timezone.now()
-
-    #     shoping_list = create_bucket(
-    #         ingredients,
-    #         today.strftime('%Y-%m-%d'),
-    #         today.strftime('%Y'),
-    #         user.get_full_name(),
-    #     )
-    #     filename = f'{user.username}_shopping_list.txt'
-    #     shopping_list_buffer = io.BytesIO()
-    #     shopping_list_buffer.write(shoping_list.encode("utf-8"))
-    #     shopping_list_buffer.seek(0)
-
-    #     response = HttpResponse(
-    #         shopping_list_buffer.read(), content_type='text/plain'
-    #     )
-    #     response['Content-Disposition'] = f'attachment; filename={filename}'
-
-    #     return response
-    #     response = HttpResponse(content_type='text/plain;charset=UTF-8')
-    #     response['Content-Disposition'] = f'attachment; filename={filename}'
-    #     response.write(shoping_list.encode("utf-8"))
-    #     return response

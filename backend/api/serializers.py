@@ -211,7 +211,6 @@ class ShowSubscriptionsSerializer(CustomUserSerializer):
 
     recipes = SerializerMethodField()
     recipes_count = serializers.IntegerField(read_only=True)
-    # recipes_count = SerializerMethodField()
 
     class Meta(CustomUserSerializer.Meta):
         fields = CustomUserSerializer.Meta.fields + (
@@ -236,10 +235,6 @@ class ShowSubscriptionsSerializer(CustomUserSerializer):
         return ShowFavoriteSerializer(
             recipes, many=True, context={'request': request}
         ).data
-
-    # def get_recipes_count(self, obj):
-    #     """Метод получения колличества рецепта."""
-    #     return obj.recipes.count()
 
 
 class SubscriptionSerializer(ModelSerializer):
