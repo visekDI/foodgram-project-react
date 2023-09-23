@@ -24,7 +24,6 @@ from .models import (
 # from users.models import Subscription, User
 
 
-
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
     list_filter = ('name',)
