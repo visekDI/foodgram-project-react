@@ -28,5 +28,13 @@ sudo docker compose -f docker-compose.production.yml exec backend python manage.
 Создать адмнистратора для управления сайтом:
 docker compose exec -it backend python manage.py createsuperuser
 
+
+## исходники
+foodgram_domain: https://visekzheldor.ddns.net/
+dockerhub_username: visekdi
+ip: 84.201.142.105
+SUPERUSER: email:visekDI@yandex.ru,
+           password: Wqpyt9Nx
+
 ## автор
 Слободчиков Василий @visekDI
