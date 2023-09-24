@@ -24,7 +24,7 @@ sudo docker compose -f docker-compose.production.yml exec backend python manage.
 sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic
 sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/collected_static/. /backend_static/static/
 Загрузить данные в БД:
-docker compose exec -it backend python manage.py loaddada data/ingredients.json
+sudo docker compose -f docker-compose.production.yml exec backend python manage.py import_csv recipes/data/ingredients.csv
 Создать адмнистратора для управления сайтом:
 docker compose exec -it backend python manage.py createsuperuser
 

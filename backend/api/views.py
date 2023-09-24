@@ -84,11 +84,17 @@ class CustomUserViewSet(UserViewSet):
     @subscribe.mapping.delete
     def delete_favorite(self, request, id):
         queryset = Subscription.objects.filter(user=request.user, author=id)
-        queryset.delete()
-        return response.Response(
-            {'detail': 'Успешная отписка'},
-            status=status.HTTP_204_NO_CONTENT,
-        )
+        deleted_count, _ = queryset.delete()
+        if deleted_count > 0:
+            return response.Response(
+                {'detail': 'Успешная отписка'},
+                status=status.HTTP_204_NO_CONTENT,
+            )
+        else:
+            return response.Response(
+                {'detail': 'Нет записей для отписки'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
@@ -157,11 +163,17 @@ class RecipeViewSet(ModelViewSet):
     @favorite.mapping.delete
     def delete_favorite(self, request, pk):
         queryset = Favourite.objects.filter(user=request.user, recipe=pk)
-        queryset.delete()
-        return response.Response(
-            {'detail': 'Рецепт успешно удалён из избранного!'},
-            status=status.HTTP_204_NO_CONTENT,
-        )
+        deleted_count, _ = queryset.delete()
+        if deleted_count > 0:
+            return response.Response(
+                {'detail': 'Рецепт успешно удалён из избранного!'},
+                status=status.HTTP_204_NO_CONTENT,
+            )
+        else:
+            return response.Response(
+                {'detail': 'Нет записей для удаления'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
     @action(
         detail=True,
@@ -174,11 +186,17 @@ class RecipeViewSet(ModelViewSet):
     @shopping_cart.mapping.delete
     def delete_shopping_cart(self, request, pk):
         queryset = ShoppingCart.objects.filter(user=request.user, recipe=pk)
-        queryset.delete()
-        return response.Response(
-            {'detail': 'Рецепт успешно удалён из корзины!'},
-            status=status.HTTP_204_NO_CONTENT,
-        )
+        deleted_count, _ = queryset.delete()
+        if deleted_count > 0:
+            return response.Response(
+                {'detail': 'Рецепт успешно удалён из корзины!'},
+                status=status.HTTP_204_NO_CONTENT,
+            )
+        else:
+            return response.Response(
+                {'detail': 'в корзине нет рецптов'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
     @action(detail=False, permission_classes=[IsAuthenticated])
     def download_shopping_cart(self, request):
