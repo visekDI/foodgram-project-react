@@ -224,15 +224,13 @@ class ShowFavoriteSerializer(ModelSerializer):
 class ShowSubscriptionsSerializer(CustomUserSerializer):
     """Сериализатор для отображения подписок пользователя."""
 
-    recipes = SerializerMethodField()
-    recipes_count = serializers.IntegerField(read_only=True)
-    remaining_recipes = serializers.IntegerField(read_only=True)
+    recipes = SerializerMethodField(method_name='get_recipes', read_only=True)
+    recipes_count = SerializerMethodField(method_name='get_recipes_count', read_only=True)
 
     class Meta(CustomUserSerializer.Meta):
         fields = CustomUserSerializer.Meta.fields + (
             'recipes',
             'recipes_count',
-            'remaining_recipes',
         )
         read_only_fields = (
             'email',
@@ -265,6 +263,9 @@ class ShowSubscriptionsSerializer(CustomUserSerializer):
             raise ValueError(LIMIT_RECIPE)
         author_recipes = object.recipes.all()[:limit]
         return RecipeShortSerializer(author_recipes, many=True).data
+
+    def read_only_count(self, object):
+        return object.recipes.count()
 
 
 class SubscriptionSerializer(ModelSerializer):
