@@ -83,6 +83,7 @@ class ImportIngredient(admin.ModelAdmin):
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
     list_display = ('name', 'id', 'author', 'added_in_favorites')
+    inlines = (IngredientInRecipe,)
     readonly_fields = ('added_in_favorites',)
     search_fields = ('name',)
     list_filter = (
