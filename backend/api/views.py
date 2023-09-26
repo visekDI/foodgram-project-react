@@ -135,11 +135,11 @@ class RecipeViewSet(ModelViewSet):
             'tags', 'ingredients'
         )
         queryset = queryset.annotate(
-            favorited=Exists(
-                Favourite.objects.filter(user=user, recipe=OuterRef('pk'))
+            is_favorited=Exists(
+                Favourite.objects.filter(user=user, recipe=OuterRef('id'))
             ),
-            in_shopping_cart=Exists(
-                ShoppingCart.objects.filter(user=user, recipe=OuterRef('pk'))
+            is_in_shopping_cart=Exists(
+                ShoppingCart.objects.filter(user=user, recipe=OuterRef('id'))
             ),
         )
         return queryset
