@@ -1,11 +1,12 @@
 from django.conf import settings
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 from .models import Subscription, User
 
 
 @admin.register(User)
-class UserAdmin(admin.ModelAdmin):
+class UserAdmin(BaseUserAdmin):
     """Админка Пользователей."""
 
     list_display = (
@@ -22,7 +23,12 @@ class UserAdmin(admin.ModelAdmin):
         'username',
         'email',
     )
-    search_fields = ('username', 'email')
+    search_fields = (
+        'username',
+        'email',
+        'first_name',
+        'last_name',
+    )
 
     @admin.display(description='Количество подписчиков')
     def count_followers(self, obj):

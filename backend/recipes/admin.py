@@ -22,9 +22,8 @@ from .models import (
 
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
-    list_filter = ('name',)
-    model = Ingredient
     list_display = ('pk', 'name', 'measurement_unit')
+    list_display_links = ('name',)
     search_fields = ('name', 'measurement_unit')
 
     def get_urls(self):
@@ -71,7 +70,6 @@ class TagAdmin(admin.ModelAdmin):
     model = Tag
     prepopulated_fields = {'slug': ('name',)}
     list_display = ('name', 'color', 'slug')
-    list_editable = ('color',)
     search_fields = ('name', 'color', 'slug')
     list_filter = ('name',)
     empty_value_display = '-пусто-'
@@ -86,6 +84,7 @@ class ImportIngredient(admin.ModelAdmin):
 class RecipeAdmin(admin.ModelAdmin):
     list_display = ('name', 'id', 'author', 'added_in_favorites')
     readonly_fields = ('added_in_favorites',)
+    search_fields = ('name',)
     list_filter = (
         'author',
         'name',
@@ -110,13 +109,11 @@ class RecipeAdmin(admin.ModelAdmin):
 @admin.register(IngredientInRecipe)
 class RecipeIngredientAdmin(admin.ModelAdmin):
     list_display = ('pk', 'recipe', 'ingredient', 'amount')
-    list_editable = ('recipe', 'ingredient', 'amount')
 
 
 @admin.register(Favourite)
 class FavoriteAdmin(admin.ModelAdmin):
     list_display = ('pk', 'user', 'recipe')
-    list_editable = ('user', 'recipe')
 
     def get_queryset(self, request):
         return (
@@ -133,7 +130,6 @@ class FavoriteAdmin(admin.ModelAdmin):
 @admin.register(ShoppingCart)
 class ShoppingCartAdmin(admin.ModelAdmin):
     list_display = ('pk', 'user', 'recipe')
-    list_editable = ('user', 'recipe')
 
     def get_queryset(self, request):
         return (

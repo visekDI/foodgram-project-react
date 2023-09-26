@@ -61,7 +61,7 @@ class CustomUserViewSet(UserViewSet):
     )
     def subscriptions(self, request):
         queryset = User.objects.filter(author__user=request.user).annotate(
-            recipes_count=Count('subscriptions')
+            recipes_count=Count('follower')
         )
         serialized_data = ShowSubscriptionsSerializer(
             self.paginate_queryset(queryset),
@@ -82,12 +82,12 @@ class CustomUserViewSet(UserViewSet):
         )
 
     @subscribe.mapping.delete
-    def delete_favorite(self, request, id):
+    def delete_subscribe(self, request, id):
         queryset = Subscription.objects.filter(user=request.user, author=id)
-        deleted_count, _ = queryset.delete()
-        if deleted_count > 0:
+        if queryset.exists():
+            queryset.delete()
             return response.Response(
-                {'detail': 'Успешная отписка'},
+                {'detail': 'Успешная отписка!'},
                 status=status.HTTP_204_NO_CONTENT,
             )
         else:
@@ -95,6 +95,17 @@ class CustomUserViewSet(UserViewSet):
                 {'detail': 'Нет записей для отписки'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        # deleted_count, _ = queryset.delete()
+        # if deleted_count > 0:
+        #     return response.Response(
+        #         {'detail': 'Успешная отписка'},
+        #         status=status.HTTP_204_NO_CONTENT,
+        #     )
+        # else:
+        #     return response.Response(
+        #         {'detail': 'Нет записей для отписки'},
+        #         status=status.HTTP_400_BAD_REQUEST,
+        #     )
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
@@ -160,11 +171,25 @@ class RecipeViewSet(ModelViewSet):
     def favorite(self, request, pk):
         return self.add_to(FavoritSerializer, Favourite, request, pk)
 
+    # @favorite.mapping.delete
+    # def delete_favorite(self, request, pk):
+    #     queryset = Favourite.objects.filter(user=request.user, recipe=pk)
+    #     if queryset is not None:
+    #         queryset.delete()
+    #         return response.Response(
+    #             {'detail': 'Рецепт успешно удалён из избранного!'},
+    #             status=status.HTTP_204_NO_CONTENT,
+    #         )
+    #     else:
+    #         return response.Response(
+    #             {'detail': 'Нет записей для удаления'},
+    #             status=status.HTTP_400_BAD_REQUEST,
+    #         )
     @favorite.mapping.delete
     def delete_favorite(self, request, pk):
         queryset = Favourite.objects.filter(user=request.user, recipe=pk)
-        deleted_count, _ = queryset.delete()
-        if deleted_count > 0:
+        if queryset.exists():
+            queryset.delete()
             return response.Response(
                 {'detail': 'Рецепт успешно удалён из избранного!'},
                 status=status.HTTP_204_NO_CONTENT,
@@ -186,8 +211,8 @@ class RecipeViewSet(ModelViewSet):
     @shopping_cart.mapping.delete
     def delete_shopping_cart(self, request, pk):
         queryset = ShoppingCart.objects.filter(user=request.user, recipe=pk)
-        deleted_count, _ = queryset.delete()
-        if deleted_count > 0:
+        if queryset.exists():
+            queryset.delete()
             return response.Response(
                 {'detail': 'Рецепт успешно удалён из корзины!'},
                 status=status.HTTP_204_NO_CONTENT,
@@ -197,6 +222,18 @@ class RecipeViewSet(ModelViewSet):
                 {'detail': 'в корзине нет рецптов'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        # queryset = ShoppingCart.objects.filter(user=request.user, recipe=pk)
+        # deleted_count, _ = queryset.delete()
+        # if deleted_count > 0:
+        #     return response.Response(
+        #         {'detail': 'Рецепт успешно удалён из корзины!'},
+        #         status=status.HTTP_204_NO_CONTENT,
+        #     )
+        # else:
+        #     return response.Response(
+        #         {'detail': 'в корзине нет рецптов'},
+        #         status=status.HTTP_400_BAD_REQUEST,
+        #     )
 
     @action(detail=False, permission_classes=[IsAuthenticated])
     def download_shopping_cart(self, request):

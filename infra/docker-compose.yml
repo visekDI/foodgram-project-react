@@ -1,12 +1,11 @@
 version: '3.3'
+
+volumes:
+  pg_data:
+  static:
+  media:
+
 services:
-
-  volumes:
-    pg_data:
-    static:
-    media:
-
-  services:
   db:
     image: postgres:13
     env_file: ../.env

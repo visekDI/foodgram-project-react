@@ -18,6 +18,7 @@ from recipes.models import (
     ShoppingCart,
     Tag,
 )
+from users.constants import LIMIT_RECIPE
 from users.models import Subscription
 
 User = get_user_model()
@@ -78,6 +79,7 @@ class RecipeReadSerializer(ModelSerializer):
             'name',
             'image',
             'text',
+            'pub_date',
             'cooking_time',
             'favorited',
             'in_shopping_cart',
@@ -118,6 +120,7 @@ class RecipeWriteSerializer(ModelSerializer):
             'image',
             'text',
             'cooking_time',
+            'pub_date',
         )
 
     def validate_ingredients(self, value):
@@ -192,7 +195,13 @@ class RecipeShortSerializer(ModelSerializer):
 
     class Meta:
         model = Recipe
-        fields = ('id', 'name', 'image', 'cooking_time')
+        fields = (
+            'id',
+            'name',
+            'image',
+            'cooking_time',
+            'pub_date',
+        )
 
     def create(self, validated_data):
         return Recipe.objects.create(**validated_data)
@@ -203,7 +212,13 @@ class ShowFavoriteSerializer(ModelSerializer):
 
     class Meta:
         model = Recipe
-        fields = ('id', 'name', 'image', 'cooking_time')
+        fields = (
+            'id',
+            'name',
+            'image',
+            'cooking_time',
+            'pub_date',
+        )
 
 
 class ShowSubscriptionsSerializer(CustomUserSerializer):
@@ -211,11 +226,13 @@ class ShowSubscriptionsSerializer(CustomUserSerializer):
 
     recipes = SerializerMethodField()
     recipes_count = serializers.IntegerField(read_only=True)
+    remaining_recipes = serializers.IntegerField(read_only=True)
 
     class Meta(CustomUserSerializer.Meta):
         fields = CustomUserSerializer.Meta.fields + (
             'recipes',
             'recipes_count',
+            'remaining_recipes',
         )
         read_only_fields = (
             'email',
@@ -235,6 +252,19 @@ class ShowSubscriptionsSerializer(CustomUserSerializer):
         return ShowFavoriteSerializer(
             recipes, many=True, context={'request': request}
         ).data
+
+    # def get_recipes(self, object):
+    #     """Метод получение рецепта."""
+    #     try:
+    #         limit = int(
+    #             self.context['request'].query_params.get(
+    #                 'recipes_limit', default=0
+    #             )
+    #         )
+    #     except ValueError:
+    #         raise ValueError(LIMIT_RECIPE)
+    #     author_recipes = object.recipes.all()[:limit]
+    #     return ShowFavoriteSerializer(author_recipes, many=True).data
 
 
 class SubscriptionSerializer(ModelSerializer):
