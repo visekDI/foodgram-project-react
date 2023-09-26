@@ -225,7 +225,9 @@ class ShowSubscriptionsSerializer(CustomUserSerializer):
     """Сериализатор для отображения подписок пользователя."""
 
     recipes = SerializerMethodField(method_name='get_recipes', read_only=True)
-    recipes_count = SerializerMethodField(method_name='get_recipes_count', read_only=True)
+    recipes_count = SerializerMethodField(
+        method_name='get_recipes_count', read_only=True
+    )
 
     class Meta(CustomUserSerializer.Meta):
         fields = CustomUserSerializer.Meta.fields + (
