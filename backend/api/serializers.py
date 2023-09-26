@@ -19,7 +19,7 @@ from recipes.models import (
     Tag,
 )
 
-# from users.constants import LIMIT_RECIPE
+from users.constants import LIMIT_RECIPE
 from users.models import Subscription
 
 User = get_user_model()
@@ -242,30 +242,30 @@ class ShowSubscriptionsSerializer(CustomUserSerializer):
             'first_name',
         )
 
-    def get_recipes(self, obj):
-        request = self.context.get('request')
-        if not request or request.user.is_anonymous:
-            return False
-        recipes = Recipe.objects.filter(author=obj)
-        limit = request.query_params.get('recipes_limit')
-        if limit:
-            recipes = recipes[: int(limit)]
-        return ShowFavoriteSerializer(
-            recipes, many=True, context={'request': request}
-        ).data
+    # def get_recipes(self, obj):
+    #     request = self.context.get('request')
+    #     if not request or request.user.is_anonymous:
+    #         return False
+    #     recipes = Recipe.objects.filter(author=obj)
+    #     limit = request.query_params.get('recipes_limit')
+    #     if limit:
+    #         recipes = recipes[: int(limit)]
+    #     return ShowFavoriteSerializer(
+    #         recipes, many=True, context={'request': request}
+    #     ).data
 
-    # def get_recipes(self, object):
-    #     """Метод получение рецепта."""
-    #     try:
-    #         limit = int(
-    #             self.context['request'].query_params.get(
-    #                 'recipes_limit', default=0
-    #             )
-    #         )
-    #     except ValueError:
-    #         raise ValueError(LIMIT_RECIPE)
-    #     author_recipes = object.recipes.all()[:limit]
-    #     return ShowFavoriteSerializer(author_recipes, many=True).data
+    def get_recipes(self, object):
+        """Метод получение рецепта."""
+        try:
+            limit = int(
+                self.context['request'].query_params.get(
+                    'recipes_limit', default=0
+                )
+            )
+        except ValueError:
+            raise ValueError(LIMIT_RECIPE)
+        author_recipes = object.recipes.all()[:limit]
+        return RecipeShortSerializer(author_recipes, many=True).data
 
 
 class SubscriptionSerializer(ModelSerializer):
