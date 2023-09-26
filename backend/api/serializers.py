@@ -266,7 +266,7 @@ class ShowSubscriptionsSerializer(CustomUserSerializer):
         author_recipes = object.recipes.all()[:limit]
         return RecipeShortSerializer(author_recipes, many=True).data
 
-    def read_only_count(self, object):
+    def get_recipes_count(self, object):
         return object.recipes.count()
 
 
