@@ -18,7 +18,6 @@ from recipes.models import (
     ShoppingCart,
     Tag,
 )
-
 from users.constants import LIMIT_RECIPE
 from users.models import Subscription
 
