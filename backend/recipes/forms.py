@@ -1,8 +1,5 @@
 from django.forms import ModelForm
 
-# # CheckboxSelectMultiple,
-#     ModelForms
-#     # ModelMultipleChoiceField,
 from .models import ImportIngredient
 
 

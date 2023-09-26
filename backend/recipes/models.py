@@ -39,7 +39,7 @@ class Tag(models.Model):
 
 
 class Ingredient(models.Model):
-    """Модель Ингридиент"""
+    """Модель Ингридиент."""
 
     name = models.CharField('Название', max_length=200)
     measurement_unit = models.CharField('Единица измерения', max_length=200)
@@ -54,7 +54,7 @@ class Ingredient(models.Model):
 
 
 class Recipe(models.Model):
-    """Модель Рецепт"""
+    """Модель Рецепт."""
 
     author = models.ForeignKey(
         User,
@@ -93,7 +93,7 @@ class Recipe(models.Model):
 
 
 class IngredientInRecipe(models.Model):
-    """Модель для связи Ингридиента и Рецепта"""
+    """Модель для связи Ингридиента и Рецепта."""
 
     recipe = models.ForeignKey(
         Recipe,
@@ -124,7 +124,7 @@ class IngredientInRecipe(models.Model):
 
 
 class Favourite(models.Model):
-    """Модель Избранное"""
+    """Модель Избранное."""
 
     user = models.ForeignKey(
         User,
@@ -153,7 +153,7 @@ class Favourite(models.Model):
 
 
 class ShoppingCart(models.Model):
-    """Модель Корзина покупок"""
+    """Модель Корзина покупок."""
 
     user = models.ForeignKey(
         User,
