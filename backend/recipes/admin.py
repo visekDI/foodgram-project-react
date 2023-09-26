@@ -57,7 +57,7 @@ class IngredientAdmin(admin.ModelAdmin):
         return render(request, 'admin/csv_import_page.html', {'form': form})
 
 
-class RecipeIngredientInline(admin.TabularInline):
+class IngredientInRecipeInline(admin.TabularInline):
     model = IngredientInRecipe
     min_num = 1
     extra = 3
@@ -83,7 +83,7 @@ class ImportIngredient(admin.ModelAdmin):
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
     list_display = ('name', 'id', 'author', 'added_in_favorites')
-    inlines = (IngredientInRecipe,)
+    inlines = (IngredientInRecipeInline,)
     readonly_fields = ('added_in_favorites',)
     search_fields = ('name',)
     list_filter = (
