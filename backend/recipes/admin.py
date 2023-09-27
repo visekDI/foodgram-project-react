@@ -71,7 +71,6 @@ class TagAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
     list_display = ('name', 'color', 'slug')
     search_fields = ('name', 'color', 'slug')
-    list_filter = ('name',)
     empty_value_display = '-пусто-'
 
 
@@ -88,7 +87,6 @@ class RecipeAdmin(admin.ModelAdmin):
     search_fields = ('name',)
     list_filter = (
         'author',
-        'name',
         'tags',
     )
 
